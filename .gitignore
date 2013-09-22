@@ -1,6 +1,27 @@
-*.class
-
 # Package Files #
 *.jar
 *.war
 *.ear
+
+#ant specific
+dist/
+build/
+.metadata
+ 
+#netbeans specific
+core
+nbproject/*
+!nbproject/project.properties
+!nbproject/project.xml
+ 
+#java specific
+*.class
+ 
+#general swap/backup files
+*.so
+*.log
+*.out
+*~
+*.swp
+*.DS_Store
+*.lock
