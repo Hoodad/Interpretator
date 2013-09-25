@@ -5,6 +5,7 @@
 package interpretator;
 
 import java.util.HashMap;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  *
@@ -33,10 +34,40 @@ public class Memory
 
 		try
 		{
+			int memoryI = 0;
 			for (int i = 0; i < symbols.length; i++)
 			{
-				symbolValues[i] = new Value(0);
-				symbolValueIndexMap.put(symbols[i].getId(), i);
+				switch(symbols[i].getKind())
+				{
+					case Symbol.KIND_FUNC:
+						System.out.println("Function declaration found: "+symbols[i].getName());
+						break;
+					
+					case Symbol.KIND_SIMPLE:
+						System.out.println("Simple declaration found: "+symbols[i].getName());
+						symbolValues[memoryI] = new Value(0);
+						symbolValueIndexMap.put(symbols[i].getId(), memoryI);
+						memoryI++;
+						break;
+						
+					case Symbol.KIND_ARRAY:
+						System.err.println("Array declaration is not supported");
+						throw new NotImplementedException();
+						
+					case Symbol.KIND_FUNCVAL:
+						System.err.println("Function value declaration is not supported");
+						throw new NotImplementedException();
+						
+					case Symbol.KIND_OBJECT:
+						System.err.println("Object declaration is not supported");
+						throw new NotImplementedException();
+						
+					case Symbol.KIND_REFERENCE:
+						System.err.println("Reference declaration is not supported");
+						throw new NotImplementedException();
+					default:
+						throw new IllegalArgumentException("Invalid declaration kind");
+				}
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException ex)

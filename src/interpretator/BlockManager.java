@@ -62,7 +62,8 @@ public class BlockManager {
 				String limits = in.next();
 				String name = in.next();
 				symbols[j] = new Symbol(symbolID, type, kind, 
-                                        info1, info2, info3, relativeAddress);
+                                        info1, info2, info3, relativeAddress,
+										extnamn, limits, name);
 			}
 
 			in.next(); //#KOD#

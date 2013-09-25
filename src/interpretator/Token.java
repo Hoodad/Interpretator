@@ -42,11 +42,13 @@ public class Token {
 	private int type;
 	private int code;
 	private String text;
+	public boolean isFunctionPar;
 
 	public Token(int type, int code, String text) {
 		this.code = code;
 		this.type = type;
 		this.text = text;
+		isFunctionPar = false;
 	}
 
 	public boolean isUserID() {

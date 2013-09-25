@@ -9,6 +9,7 @@ import java.util.Stack;
 import operatorPrecedens.SymbolOperand;
 import operatorPrecedens.ValueOperand;
 import operatorPrecedens.operators.Operator;
+import operatorPrecedens.operators.OperatorCodes;
 import static operatorPrecedens.operators.OperatorCodes.*;
 
 /**
@@ -17,17 +18,17 @@ import static operatorPrecedens.operators.OperatorCodes.*;
  */
 public class Interpretator {
 
-	private static final int I_BECOME = 0;
-	private static final int I_ADDITION = 1;
-	private static final int I_MULTIPLICATION = 2;
-	private static final int I_COMPARE = 3;
-	private static final int I_USERFUNCTION = 4;
-	private static final int I_ARRAY = 5;
-	private static final int I_PARAMETERSEPARATOR = 6;
-	private static final int I_LEFTPAR = 7;
-	private static final int I_RIGHTPAR = 8;
-	private static final int I_FUNCTIONPAR = 9;
-	private static final int I_ENDOFSTACK = 10;
+	public static final int I_BECOME = 0;
+	public static final int I_ADDITION = 1;
+	public static final int I_MULTIPLICATION = 2;
+	public static final int I_COMPARE = 3;
+	public static final int I_USERFUNCTION = 4;
+	public static final int I_ARRAY = 5;
+	public static final int I_PARAMETERSEPARATOR = 6;
+	public static final int I_LEFTPAR = 7;
+	public static final int I_RIGHTPAR = 8;
+	public static final int I_FUNCTIONPAR = 9;
+	public static final int I_ENDOFSTACK = 10;
 	//S = store
 	//? = unkown
 	//E 
@@ -36,7 +37,7 @@ public class Interpretator {
 	//T 
 	//L = load
 	//A = 
-	private static char[][] ActionMatrix = {
+	public final static char[][] ActionMatrix = {
 		{'E', 'S', 'S', 'S', 'F', 'S', 'U', 'S', 'E', 'E', 'U'},
 		{'E', 'U', 'S', 'U', 'F', 'S', 'U', 'S', 'U', 'E', 'U'},
 		{'E', 'U', 'U', 'U', 'F', 'S', 'U', 'S', 'U', 'E', 'U'},
@@ -69,16 +70,12 @@ public class Interpretator {
 				depth--;
 				tokens.moveCursor();
 			} else if (nextToken.isUserID()) {
-				//Value val = memory.getSymbolValue(nextToken.getCode());
-				//TODO: implement operator precedence
-				//val.set(OperatorAdd.instance().calculate(val, new Value(0.5f)));
-				//System.out.println(nextToken.getText() + " = " + val);
 				System.out.println("Found a variable named: " + nextToken.getText());
 				interpretExpression(block, memory, tokens);
 			} else if (nextToken.isCallblock()) {
-				
+
 				System.out.println("Found a Callblock!");
-				
+
 				Block callblock = BlockManager.getBlock(nextToken.getCode());
 
 				//a callblock is either an inner block or a function
@@ -93,126 +90,153 @@ public class Interpretator {
 
 				tokens.moveCursor();
 			} else if (nextToken.isRowNumber()) {
-				System.out.println("");
-				System.out.println("---" + nextToken.getCode() + "---");
-				System.out.println("");
+				System.out.println("#Line#");
 				tokens.moveCursor();
-			} else {
-				tokens.moveCursor();
+			}
+			else{
+				System.err.println("Unkown token, don't know what to do");
 			}
 		}
 	}
 
 	private static void interpretExpression(Block currentBlock, Memory memory,
 			TokenStream tokens) {
-		//TODO: implement with operator precedence
 		Stack<Token> operators = new Stack<Token>();
 		Stack<Operand> operands = new Stack<Operand>();
 		boolean expressionComplete = false;
-		Token hand = null;
+		Token hand;
 
 		while (!expressionComplete) {
 			hand = tokens.nextToken();
 
-			switch (hand.getType()) {
-				case Token.TYPE_ID:
-					operands.push(new SymbolOperand(hand.getCode(), memory));
-					System.out.println("Pushing variable: " + hand.getText());
-					break;
-				case Token.TYPE_INT:
-					operands.push(new ValueOperand(new Value(hand.getCode())));
-					System.out.println("Pushing integer with value: " + hand.getText());
-					break;
-				case Token.TYPE_OPERATOR:
-					char action;
-					do {
-						if (operators.isEmpty()) {
-							int handIndex = getActionMatrixIndex(hand);
-
-							try {
-								action = ActionMatrix[I_ENDOFSTACK][handIndex];
-							} catch (ArrayIndexOutOfBoundsException err) {
-								action = '?';
-							}
-						} else {
-							action = getAction(operators.peek(), hand);
-						}
-
-						switch (action) {
-							case 'S': // Stack push
-								operators.push(hand);
-								break;
-
-							case 'U': // Utför?
-								Token operatorToken = operators.pop();
-								Operator.executeOperator(operatorToken, operands);
-								break;
-
-							case 'A': //Avsluta
-								expressionComplete = true;
-								break;
-
-							case 'F':
-								//Nya op. stackas, dess prolog utförs, läs nästa
-
-								//Prolog = föregående, därav samma funktions anrop som vid U
-								operatorToken = operators.pop();
-								Operator.executeOperator(operatorToken, operands);
-
-								operators.push(hand);
-								break;
-
-							case 'C':
-								//Nya op. är (, stacka funk.parentes, läs nästa
-
-								//C kommer endast när ett F är föregående
-								//Vet ej hur man ska stacka en funk.parantes.....
-								operators.push(hand);
-								break;
-
-							case 'T':
-								//Överför en parameter, läs nästa
-
-								//Fixas senare
-								System.err.println("Not yet implemented");
-								break;
-
-							case 'L':
-								//Överför sista parameter, läs nästa
-
-								//F()
-								//Dont do anything except read next
-								break;
-
-							case 'E':
-								System.err.println("Syntax error in expression");
-								break;
-						}
-					} while (action == 'U');
-					break;
+			if (!isOperator(currentBlock, hand)) {
+				processOperand(hand, operands, memory);
+			} else //is operator
+			{
+				char action;
+				do {
+					System.out.println("Hand contains: "+hand.getText());
+					action = processOperator(currentBlock, operators, hand, operands);
+					if (action == 'A') {
+						expressionComplete = true;
+					}
+					System.out.println("Action: " + action);
+				} while (action == 'U');
 			}
 		}
+		System.out.println("##Expression complete##");
 	}
 
-	private static char getAction(Token stack, Token hand) {
-		int stackIndex, handIndex;
+	private static boolean isFunctionCall(Block currentBlock, Token token) {
+		if (token.getType() == Token.TYPE_ID) {
+			try{
+			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNC) {
+				return true;
+			}
+			}catch (Exception e){
+				return false;
+			}
+		}
+		
+		return false;
+	}
+	
+	private static boolean isOperator(Block currentBlock, Token token) {
 
-		stackIndex = getActionMatrixIndex(stack);
-		handIndex = getActionMatrixIndex(hand);
-
-		try {
-			return ActionMatrix[stackIndex][handIndex];
-		} catch (ArrayIndexOutOfBoundsException err) {
-			return '?';
+		if (token.getType() == Token.TYPE_OPERATOR) {
+			return true;
+		}
+		if(isFunctionCall(currentBlock, token)) {
+			System.out.println("Function call detected");
+			return true;
 		}
 
+		return false;
 	}
+	private static char processOperator(Block currentBlock, Stack<Token> operators, Token hand, Stack<Operand> operands) {
+		char action;
+		if (operators.isEmpty()) {
+			int handIndex = getActionMatrixIndex(currentBlock, hand);
 
-	private static int getActionMatrixIndex(Token token) {
+			action = getActionFromAM(I_ENDOFSTACK,handIndex);
+		} else {
+			action = getAction(currentBlock, operators.peek(), hand);
+		}
+
+		switch (action) {
+			case 'S': // Stack push
+				System.out.println("Operator "+hand.getText()+" pushed to stack");
+				operators.push(hand);
+				break;
+			case 'U': // Utför
+				Token operatorToken = operators.pop();
+				Operator.executeOperator(operatorToken, operands);
+				break;
+			case 'A': //Avsluta
+				break;
+			case 'P': //Pop, läs nästa
+				operators.pop();
+				break;
+			case 'F'://Nya op. stackas, dess prolog utförs, läs nästa
+				//Prolog = föregående, därav samma funktions anrop som vid U
+				//operatorToken = operators.pop();
+				//Operator.executeOperator(operatorToken, operands);
+
+				operators.push(hand);
+				System.out.println("Function call pushed to operator stack");
+				break;
+			case 'C'://Nya op. är (, stacka funk.parentes, läs nästa
+				//C kommer endast när ett F är föregående
+				//Vet ej hur man ska stacka en funk.parantes.....
+				Token funcPar = new Token(Token.TYPE_OPERATOR, OperatorCodes.OP_LEFT_PAR, "f(");
+				funcPar.isFunctionPar = true;
+				operators.push(funcPar);
+				System.out.println("Function Parenthesis added to stack");
+				break;
+			case 'T'://Överför en parameter, läs nästa
+				operands.pop();
+				System.out.println("Transfer next parameter, not yet implemented");
+				break;
+			case 'L': //Överför sista parameter, läs nästa
+				//F()
+				//Dont do anything except read next
+				//TODO: Ska föra övers till funktion anropet senare!!
+				operands.pop();
+				
+				
+				operators.pop();
+				operators.pop();
+				operands.push(new ValueOperand(new Value(100)));
+				System.out.println("Transfer last parameter");
+				break;
+			case 'E':
+				System.err.println("Syntax error in expression");
+				break;
+		}
+		return action;
+	}
+	
+	private static char getAction(Block currentBlock, Token stack, Token hand) {
+		int stackIndex, handIndex;
+
+		stackIndex = getActionMatrixIndex(currentBlock, stack);
+		handIndex = getActionMatrixIndex(currentBlock, hand);
+
+		return getActionFromAM(stackIndex,handIndex);
+
+	}
+	
+	private static int getActionMatrixIndex(Block currentBlock, Token token) {
+		if(isFunctionCall(currentBlock, token)) {
+			return I_USERFUNCTION;
+		}
+		
 		switch (token.getCode()) {
 			case OP_SEMI:
 				return I_ENDOFSTACK;
 			case OP_LEFT_PAR:
+				if(token.isFunctionPar)
+					return I_FUNCTIONPAR;
 				return I_LEFTPAR;
 			case OP_RIGHT_PAR:
 				return I_RIGHTPAR;
@@ -241,6 +265,27 @@ public class Interpretator {
 			default:
 				//This return statement should never be used 
 				return -1;
+		}
+	}
+
+	
+
+	private static void processOperand(Token hand, Stack<Operand> operands, Memory memory) {
+		switch (hand.getType()) {
+			case Token.TYPE_ID:
+				operands.push(new SymbolOperand(hand.getCode(), memory));
+				break;
+			case Token.TYPE_INT:
+				operands.push(new ValueOperand(new Value(hand.getCode())));
+				break;
+		}
+		System.out.println("Add Operand to stack: " + hand.getText());
+	}
+	private static char getActionFromAM(int stackIndex, int handIndex){
+		try{
+			return ActionMatrix[stackIndex][handIndex];
+		}catch(ArrayIndexOutOfBoundsException err){
+			return '?';
 		}
 	}
 }
