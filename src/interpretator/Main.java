@@ -20,7 +20,7 @@ public class Main
 	{
 		BlockManager.loadBlocksFromFile("tst5.p1");
 		Interpretator.interpretBlock(BlockManager.getBaseBlock());
-		System.out.println(" (: Finished :)");
+		System.out.println("(: Finished :)");
 		//testDivision();
 		//testVariableComplexity();
 		//testValueConversion();
