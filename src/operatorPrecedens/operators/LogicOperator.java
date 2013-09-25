@@ -10,16 +10,16 @@ import interpretator.Value;
  *
  * @author Robinerd
  */
-public abstract class ArithmeticOperator implements BaseOperator
+public abstract class LogicOperator implements BaseOperator
 {
 
-	protected abstract int calculate(boolean a, boolean b); // return int since this is a numerical operator, not logical
+	protected abstract boolean calculate(boolean a, boolean b);
 
-	protected abstract int calculate(int a, int b);
+	protected abstract boolean calculate(int a, int b);
 
-	protected abstract float calculate(float a, float b);
+	protected abstract boolean calculate(float a, float b);
 
-	protected abstract double calculate(double a, double b);
+	protected abstract boolean calculate(double a, double b);
 
 	public Value calculate(Value a, Value b)
 	{

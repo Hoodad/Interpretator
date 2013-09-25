@@ -32,6 +32,7 @@ public class FirstFileTest {
     public void tearDown() {
     }
 	
+	@Ignore
 	@Test
 	public void actionMatrixTest() {
 		System.out.println("+ func "+Interpretator.ActionMatrix[Interpretator.I_ADDITION][Interpretator.I_USERFUNCTION]);
@@ -43,42 +44,64 @@ public class FirstFileTest {
 		
 	}
 	
+	@Ignore
     @Test
     public void tst0() {
         runTest("tst0.p1");
         assertEquals(successfulRun, true);
     }
 	
+	@Ignore
     @Test
     public void tst1() {
         runTest("tst1.p1");
         assertEquals(successfulRun, true);
     }
     
+	@Ignore
     @Test
     public void tst2() {
         runTest("tst2.p1");
         assertEquals(successfulRun, true);
     }
     
+	@Ignore
     @Test
     public void tst3() {
         runTest("tst3.p1");
         assertEquals(successfulRun, true);
     }
     
+	@Ignore
     @Test
     public void tst4() {
         runTest("tst4.p1");
         assertEquals(successfulRun, true);
     }
 	
+	@Ignore
 	@Test
 	public void tst5() {
 		runTest("tst5.p1");
 		assertEquals(successfulRun, true);
 	}
     
+	int test6Func(int X) {
+		if(X>0)
+			return X + test6Func(X-1);
+		else
+			return 0;
+	}
+	
+	@Test
+	public void tst6() {
+		runTest("tst6.p1");
+		assertEquals(successfulRun, true);
+		
+		int i=3;
+		i = i+test6Func(1)*i+test6Func(i);
+		System.out.println("Expected result: "+i);
+	}
     
     private void runTest(String p_testProg){
         try{

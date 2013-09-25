@@ -50,4 +50,12 @@ public class TokenStream
 
 		return tokens[tokenCursor++];
 	}
+
+	public int getCursorPos() {
+		return tokenCursor;
+	}
+	
+	public void setCursorPos(int pos) {
+		tokenCursor = pos;
+	}
 }

@@ -58,13 +58,13 @@ public class Interpretator {
 			Memory dynamicEnvironment, Memory p_memory) {
 		TokenStream tokens = block.getTokens();
 		tokens.resetCursor();
-		
+
 		Memory memory = p_memory;
-		if(memory == null){
+		if (memory == null) {
 			memory = new Memory(block.getSymbols(), staticEnvironment,
-				dynamicEnvironment, block.getSize());
+					dynamicEnvironment, block.getSize());
 		}
-		
+
 		int depth = 1;
 		while (depth > 0 && tokens.hasNextToken()) {
 			Token nextToken = tokens.peekToken();
@@ -95,50 +95,88 @@ public class Interpretator {
 			} else if (nextToken.isRowNumber()) {
 				System.out.println("#Line#");
 				tokens.moveCursor();
-			}
-			else if (nextToken.isIf()){
+			} else if (nextToken.isIf()) {
 				System.out.println("If-statement ");
 				tokens.moveCursor();
-			}
-			else{
+			} else {
 				tokens.moveCursor();
 				System.err.println("Unkown token, don't know what to do");
 			}
 		}
 	}
 
+	//used by if statements
+	private static enum BranchingStatus {
+
+		NONE, THEN, ELSE
+	}
+
 	private static void interpretExpression(Block currentBlock, Memory memory,
 			TokenStream tokens) {
-		
+
 		System.out.println("##Begin Expression##");
 		Stack<Token> operators = new Stack<Token>();
 		Stack<Operand> operands = new Stack<Operand>();
+		BranchingStatus branchingStatus = BranchingStatus.NONE;
+		boolean ifResult = true;
+		
 		boolean expressionComplete = false;
 		Token hand = null;
 		while (!expressionComplete) {
 			hand = tokens.nextToken();
 			hand.next = tokens.peekToken();
-			
+			switch (branchingStatus) {
+				case THEN:
+					System.out.println("## THEN");
+					if (hand.isElse()) {
+						branchingStatus = BranchingStatus.ELSE;
+					}
+					if (!ifResult) {
+						continue;
+					}
+					break;
+
+				case ELSE:
+					System.out.println("ELSE ##");
+					if (hand.isSemicolon()) {
+						branchingStatus = BranchingStatus.NONE;
+					}
+					else if (ifResult) {
+						continue;
+					}
+					break;
+				case NONE:
+					//just parse as normal
+					break;
+			}
+
 			if (isOperand(currentBlock, hand)) {
 				processOperand(hand, operands, memory);
 			} else //is operator
 			{
 				char action;
 				do {
-					System.out.println("Hand contains: "+hand.getText());
+					System.out.println("Hand contains: " + hand.getText());
 					action = processOperator(memory, currentBlock, operators, hand, operands);
-					if (action == 'A') {
-						expressionComplete = true;
-					}
 					System.out.println("Action: " + action);
+					if (action == 'A') {
+						if(hand.isThen())
+						{
+							ifResult = operands.pop().getValue().getAsBoolean();
+							branchingStatus = BranchingStatus.THEN;
+							System.out.println("Condition evaluated to: " + ifResult);
+						}
+						else
+						{
+							expressionComplete = true;
+						}
+					}
 				} while (action == 'U');
 			}
 		}
 		
-		/*if(hand.isThen()) {
-			boolean conditionResult =
-		}*/
-		System.out.println("##Expression complete##");
+		System.out.println(
+				"##Expression complete##");
 	}
 
 	private static boolean isFunctionCall(Block currentBlock, Token token) {
@@ -147,46 +185,48 @@ public class Interpretator {
 				return true;
 			}
 			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNCVAL) {
-				if(token.next.getCode() == OP_LEFT_PAR){
+				if (token.next.getCode() == OP_LEFT_PAR) {
 					return true;
 				}
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	private static boolean isOperand(Block currentBlock, Token token) {
 
 		if (token.getType() == Token.TYPE_OPERATOR) {
 			return false;
 		}
-		if(token.isThen()) {
+		if (token.isThen()) {
 			return false;
 		}
-		if(token.isElse()) {
+		if (token.isElse()) {
 			return false;
 		}
-		if(isFunctionCall(currentBlock, token)) {
+		if (isFunctionCall(currentBlock, token)) {
 			System.out.println("Function call detected");
 			return false;
 		}
 
 		return true;
 	}
+
 	private static char processOperator(Memory currentMemory, Block currentBlock, Stack<Token> operators, Token hand, Stack<Operand> operands) {
 		char action;
+
 		if (operators.isEmpty()) {
 			int handIndex = getActionMatrixIndex(currentBlock, hand);
 
-			action = getActionFromAM(I_ENDOFSTACK,handIndex);
+			action = getActionFromAM(I_ENDOFSTACK, handIndex);
 		} else {
 			action = getAction(currentBlock, operators.peek(), hand);
 		}
 
 		switch (action) {
 			case 'S': // Stack push
-				System.out.println("Operator "+hand.getText()+" pushed to stack");
+				System.out.println("Operator " + hand.getText() + " pushed to stack");
 				operators.push(hand);
 				break;
 			case 'U': // Utför
@@ -223,20 +263,22 @@ public class Interpretator {
 				//Dont do anything except read next
 				//TODO: Ska föra över till funktionsanropet senare!!
 				Value lastParam = operands.pop().getValue();
-				
+
 				operators.pop();
 				Token functionCall = operators.pop();
 				Symbol functionSymbol = currentBlock.getFunctionSymbol(functionCall.getCode());
 				Block functionBlock = BlockManager.getBlock(functionSymbol.getInfo2());
-				
 				Memory functionMemory = new Memory(functionBlock.getSymbols(),
 						null, currentMemory, functionBlock.getSize());
-				
+
 				functionMemory.setParameter(0, lastParam);
-				
+
+				int calledFromToken = currentBlock.getTokens().getCursorPos();
 				interpretBlock(functionBlock, null, null, functionMemory);
-				operands.push(new ValueOperand(functionMemory.getReturnValue()));
+				currentBlock.getTokens().setCursorPos(calledFromToken);
 				
+				operands.push(new ValueOperand(functionMemory.getReturnValue()));
+				System.out.println("Function returned "+functionMemory.getReturnValue().getAsInt());
 				System.out.println("Transfer last parameter");
 				break;
 			case 'E':
@@ -245,33 +287,34 @@ public class Interpretator {
 		}
 		return action;
 	}
-	
+
 	private static char getAction(Block currentBlock, Token stack, Token hand) {
 		int stackIndex, handIndex;
 
 		stackIndex = getActionMatrixIndex(currentBlock, stack);
 		handIndex = getActionMatrixIndex(currentBlock, hand);
 
-		return getActionFromAM(stackIndex,handIndex);
+		return getActionFromAM(stackIndex, handIndex);
 
 	}
-	
+
 	private static int getActionMatrixIndex(Block currentBlock, Token token) {
-		if(token.isThen()) {
+		if (token.isThen()) {
 			return I_ENDOFSTACK;
 		}
-		if(token.isElse()){
+		if (token.isElse()) {
 			return I_ENDOFSTACK;
 		}
-		if(isFunctionCall(currentBlock, token)) {
+		if (isFunctionCall(currentBlock, token)) {
 			return I_USERFUNCTION;
 		}
 		switch (token.getCode()) {
 			case OP_SEMI:
 				return I_ENDOFSTACK;
 			case OP_LEFT_PAR:
-				if(token.isFunctionPar)
+				if (token.isFunctionPar) {
 					return I_FUNCTIONPAR;
+				}
 				return I_LEFTPAR;
 			case OP_RIGHT_PAR:
 				return I_RIGHTPAR;
@@ -303,8 +346,6 @@ public class Interpretator {
 		}
 	}
 
-	
-
 	private static void processOperand(Token hand, Stack<Operand> operands, Memory memory) {
 		switch (hand.getType()) {
 			case Token.TYPE_ID:
@@ -316,10 +357,11 @@ public class Interpretator {
 		}
 		System.out.println("Add Operand to stack: " + hand.getText());
 	}
-	private static char getActionFromAM(int stackIndex, int handIndex){
-		try{
+
+	private static char getActionFromAM(int stackIndex, int handIndex) {
+		try {
 			return ActionMatrix[stackIndex][handIndex];
-		}catch(ArrayIndexOutOfBoundsException err){
+		} catch (ArrayIndexOutOfBoundsException err) {
 			return '?';
 		}
 	}

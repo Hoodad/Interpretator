@@ -29,19 +29,23 @@ public class Operator
 				System.out.println("Variable " + variableOp.symbolID + " = " + value);
 				break;
 			case OP_ADD:
-				executeArithmeticOperator(OperatorAdd.instance(), operands);
+				executeOperator(OperatorAdd.instance(), operands);
 				break;
 			case OP_SUBTRACT:
-				executeArithmeticOperator(OperatorSubtract.instance(), operands);
+				executeOperator(OperatorSubtract.instance(), operands);
 				break;
 			case OP_MULTIPLY:
-				executeArithmeticOperator(OperatorMultiply.instance(), operands);
+				executeOperator(OperatorMultiply.instance(), operands);
 				break;
-			
+			case OP_GREATER_THAN:
+				executeOperator(OperatorGreaterThan.instance(), operands);
+				break;
+			default:
+				System.err.println("Unsupported Operator: "+operatorToken.getText());
 		}
 	}
 	
-	private static void executeArithmeticOperator(ArithmeticOperator operator, Stack<Operand> operands) {
+	private static void executeOperator(BaseOperator operator, Stack<Operand> operands) {
 		Operand valueRight = operands.pop();
 		Operand valueLeft = operands.pop();
 
