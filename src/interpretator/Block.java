@@ -40,6 +40,21 @@ public class Block {
 		return symbols;
 	}
 
+	public Symbol getFunctionSymbol(int symbolID) {
+		for (Symbol symbol : symbols) {
+			if (symbol.getId() == symbolID) {
+				if(symbol.getKind() != Symbol.KIND_FUNCVAL) {
+					return symbol;
+				}
+			}
+		}
+
+		if (staticFather >= 0) {
+			return BlockManager.getBlock(staticFather).getSymbol(symbolID);
+		}
+		return null;		
+	}
+	
 	public Symbol getSymbol(int symbolID) {
 		for (Symbol symbol : symbols) {
 			if (symbol.getId() == symbolID) {

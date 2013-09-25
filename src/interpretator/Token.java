@@ -43,6 +43,7 @@ public class Token {
 	private int code;
 	private String text;
 	public boolean isFunctionPar;
+	public Token next;
 
 	public Token(int type, int code, String text) {
 		this.code = code;
@@ -81,5 +82,17 @@ public class Token {
 
 	public String getText() {
 		return text;
+	}
+
+	boolean isIf() {
+		return type == TYPE_ID && code == ID_IF;
+	}
+
+	boolean isThen() {
+		return type == TYPE_ID && code == ID_THEN;
+	}
+	
+	boolean isElse() {
+		return type == TYPE_ID && code == ID_ELSE;
 	}
 }

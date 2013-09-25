@@ -96,6 +96,10 @@ public class Interpretator {
 				System.out.println("#Line#");
 				tokens.moveCursor();
 			}
+			else if (nextToken.isIf()){
+				System.out.println("If-statement ");
+				tokens.moveCursor();
+			}
 			else{
 				tokens.moveCursor();
 				System.err.println("Unkown token, don't know what to do");
@@ -105,15 +109,17 @@ public class Interpretator {
 
 	private static void interpretExpression(Block currentBlock, Memory memory,
 			TokenStream tokens) {
+		
+		System.out.println("##Begin Expression##");
 		Stack<Token> operators = new Stack<Token>();
 		Stack<Operand> operands = new Stack<Operand>();
 		boolean expressionComplete = false;
-		Token hand;
-
+		Token hand = null;
 		while (!expressionComplete) {
 			hand = tokens.nextToken();
-
-			if (!isOperator(currentBlock, hand)) {
+			hand.next = tokens.peekToken();
+			
+			if (isOperand(currentBlock, hand)) {
 				processOperand(hand, operands, memory);
 			} else //is operator
 			{
@@ -128,6 +134,10 @@ public class Interpretator {
 				} while (action == 'U');
 			}
 		}
+		
+		/*if(hand.isThen()) {
+			boolean conditionResult =
+		}*/
 		System.out.println("##Expression complete##");
 	}
 
@@ -136,22 +146,33 @@ public class Interpretator {
 			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNC) {
 				return true;
 			}
+			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNCVAL) {
+				if(token.next.getCode() == OP_LEFT_PAR){
+					return true;
+				}
+			}
 		}
 		
 		return false;
 	}
 	
-	private static boolean isOperator(Block currentBlock, Token token) {
+	private static boolean isOperand(Block currentBlock, Token token) {
 
 		if (token.getType() == Token.TYPE_OPERATOR) {
-			return true;
+			return false;
+		}
+		if(token.isThen()) {
+			return false;
+		}
+		if(token.isElse()) {
+			return false;
 		}
 		if(isFunctionCall(currentBlock, token)) {
 			System.out.println("Function call detected");
-			return true;
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 	private static char processOperator(Memory currentMemory, Block currentBlock, Stack<Token> operators, Token hand, Stack<Operand> operands) {
 		char action;
@@ -205,7 +226,7 @@ public class Interpretator {
 				
 				operators.pop();
 				Token functionCall = operators.pop();
-				Symbol functionSymbol = currentBlock.getSymbol(functionCall.getCode());
+				Symbol functionSymbol = currentBlock.getFunctionSymbol(functionCall.getCode());
 				Block functionBlock = BlockManager.getBlock(functionSymbol.getInfo2());
 				
 				Memory functionMemory = new Memory(functionBlock.getSymbols(),
@@ -236,10 +257,15 @@ public class Interpretator {
 	}
 	
 	private static int getActionMatrixIndex(Block currentBlock, Token token) {
+		if(token.isThen()) {
+			return I_ENDOFSTACK;
+		}
+		if(token.isElse()){
+			return I_ENDOFSTACK;
+		}
 		if(isFunctionCall(currentBlock, token)) {
 			return I_USERFUNCTION;
 		}
-		
 		switch (token.getCode()) {
 			case OP_SEMI:
 				return I_ENDOFSTACK;
