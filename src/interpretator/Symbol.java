@@ -30,9 +30,9 @@ public class Symbol {
 		this.id = id;
 		this.type = type;
 		this.kind = kind;
-		this.info1 = info1;
-		this.info2 = info2;
-		this.info3 = info3;
+		this.info1 = info1; //Antal parametrar
+		this.info2 = info2; //Block index
+		this.info3 = info3;  
 		this.relativeAddress = relativeAddress;
 		this.extnamn = extnamn;
 		this.limits = limits;

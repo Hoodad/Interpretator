@@ -14,8 +14,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public class Memory
 {
 
-	public static final int DYNAMIC_MEMORY_INHERITANCE = 0;
-	public static final int STATIC_MEMORY_INHERITANCE = 1;
+	public static final int DYNAMIC_MEMORY_INHERITANCE	= 0;
+	public static final int STATIC_MEMORY_INHERITANCE	= 1;
 	//choose how variables are inherited, from static or dynamic father
 	public static final int MEMORY_INHERITANCE = STATIC_MEMORY_INHERITANCE;
 	
@@ -23,6 +23,7 @@ public class Memory
 	private Memory staticFather;
 	private Memory dynamicFather;
 	HashMap<Integer, Integer> symbolValueIndexMap;
+	private int returnValueIndex = -1;
 
 	public Memory(Symbol[] symbols, Memory staticFather, Memory dynamicFather, int size)
 	{
@@ -55,9 +56,13 @@ public class Memory
 						throw new NotImplementedException();
 						
 					case Symbol.KIND_FUNCVAL:
-						System.err.println("Function value declaration is not supported");
-						throw new NotImplementedException();
+						System.out.println("Function return value found: "+symbols[i].getName());
+						symbolValues[memoryI] = new Value(0);
+						symbolValueIndexMap.put(symbols[i].getId(), memoryI);
+						returnValueIndex = memoryI;
+						memoryI++;
 						
+						break;
 					case Symbol.KIND_OBJECT:
 						System.err.println("Object declaration is not supported");
 						throw new NotImplementedException();
@@ -128,6 +133,15 @@ public class Memory
 		return symbolValues[valueIndex];
 	}
 
+	public void setParameter(int parameterIndex, Value value) {
+		symbolValues[parameterIndex+1] = value;
+	}
+	
+	public Value getReturnValue()
+	{
+		return symbolValues[returnValueIndex];
+	}
+	
 	private Memory getInheritedMemory()
 	{
 		Memory father;
@@ -145,4 +159,5 @@ public class Memory
 		}
 		return father;
 	}
+	
 }

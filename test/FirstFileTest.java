@@ -72,6 +72,12 @@ public class FirstFileTest {
         runTest("tst4.p1");
         assertEquals(successfulRun, true);
     }
+	
+	@Test
+	public void tst5() {
+		runTest("tst5.p1");
+		assertEquals(successfulRun, true);
+	}
     
     
     private void runTest(String p_testProg){

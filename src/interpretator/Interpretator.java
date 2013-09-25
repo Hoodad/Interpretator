@@ -51,17 +51,20 @@ public class Interpretator {
 		{'S', 'S', 'S', 'S', 'F', 'S', '?', 'S', 'E', 'E', 'A'},};
 
 	public static void interpretBlock(Block block) {
-		interpretBlock(block, null, null);
+		interpretBlock(block, null, null, null);
 	}
 
 	public static void interpretBlock(Block block, Memory staticEnvironment,
-			Memory dynamicEnvironment) {
+			Memory dynamicEnvironment, Memory p_memory) {
 		TokenStream tokens = block.getTokens();
-
 		tokens.resetCursor();
-		Memory memory = new Memory(block.getSymbols(), staticEnvironment,
+		
+		Memory memory = p_memory;
+		if(memory == null){
+			memory = new Memory(block.getSymbols(), staticEnvironment,
 				dynamicEnvironment, block.getSize());
-
+		}
+		
 		int depth = 1;
 		while (depth > 0 && tokens.hasNextToken()) {
 			Token nextToken = tokens.peekToken();
@@ -81,11 +84,11 @@ public class Interpretator {
 				//a callblock is either an inner block or a function
 				if (callblock.getStaticFather() == block.getBlockID()) //if it's an inner block, use the memory of this block as static environment
 				{
-					interpretBlock(callblock, memory, memory);
+					interpretBlock(callblock, memory, memory, null);
 				} else //TODO: this assumption is wrong since functions are allowed to be declared inside of other blocks
 				//otherwise there is no static environment (no classes are permitted)
 				{
-					interpretBlock(callblock, null, memory);
+					interpretBlock(callblock, null, memory, null);
 				}
 
 				tokens.moveCursor();
@@ -116,7 +119,7 @@ public class Interpretator {
 				char action;
 				do {
 					System.out.println("Hand contains: "+hand.getText());
-					action = processOperator(currentBlock, operators, hand, operands);
+					action = processOperator(memory, currentBlock, operators, hand, operands);
 					if (action == 'A') {
 						expressionComplete = true;
 					}
@@ -129,12 +132,8 @@ public class Interpretator {
 
 	private static boolean isFunctionCall(Block currentBlock, Token token) {
 		if (token.getType() == Token.TYPE_ID) {
-			try{
 			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNC) {
 				return true;
-			}
-			}catch (Exception e){
-				return false;
 			}
 		}
 		
@@ -153,7 +152,7 @@ public class Interpretator {
 
 		return false;
 	}
-	private static char processOperator(Block currentBlock, Stack<Token> operators, Token hand, Stack<Operand> operands) {
+	private static char processOperator(Memory currentMemory, Block currentBlock, Stack<Token> operators, Token hand, Stack<Operand> operands) {
 		char action;
 		if (operators.isEmpty()) {
 			int handIndex = getActionMatrixIndex(currentBlock, hand);
@@ -200,13 +199,22 @@ public class Interpretator {
 			case 'L': //Överför sista parameter, läs nästa
 				//F()
 				//Dont do anything except read next
-				//TODO: Ska föra övers till funktion anropet senare!!
-				operands.pop();
-				
+				//TODO: Ska föra över till funktionsanropet senare!!
+				Value lastParam = operands.pop().getValue();
 				
 				operators.pop();
-				operators.pop();
-				operands.push(new ValueOperand(new Value(100)));
+				Token functionCall = operators.pop();
+				Symbol functionSymbol = currentBlock.getSymbol(functionCall.getCode());
+				Block functionBlock = BlockManager.getBlock(functionSymbol.getInfo2());
+				
+				Memory functionMemory = new Memory(functionBlock.getSymbols(),
+						null, currentMemory, functionBlock.getSize());
+				
+				functionMemory.setParameter(0, lastParam);
+				
+				interpretBlock(functionBlock, null, null, functionMemory);
+				operands.push(new ValueOperand(functionMemory.getReturnValue()));
+				
 				System.out.println("Transfer last parameter");
 				break;
 			case 'E':
