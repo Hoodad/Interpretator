@@ -97,6 +97,7 @@ public class Interpretator {
 				tokens.moveCursor();
 			}
 			else{
+				tokens.moveCursor();
 				System.err.println("Unkown token, don't know what to do");
 			}
 		}

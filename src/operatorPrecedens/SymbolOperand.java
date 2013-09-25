@@ -5,7 +5,6 @@
 package operatorPrecedens;
 
 import interpretator.Memory;
-import interpretator.Symbol;
 import interpretator.Value;
 
 /**
