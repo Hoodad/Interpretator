@@ -26,7 +26,7 @@ public class Operator
 				Value value = valueOp.getValue();
 				variableOp.memory.setSymbolValue(variableOp.symbolID, value);
 				
-				System.out.println(variableOp.symbolID + " = " + value);
+				System.out.println("Variable " + variableOp.symbolID + " = " + value);
 				break;
 			case OP_ADD:
 				executeArithmeticOperator(OperatorAdd.instance(), operands);

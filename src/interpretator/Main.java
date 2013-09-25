@@ -13,7 +13,6 @@ import operatorPrecedens.operators.OperatorDivide;
  */
 public class Main
 {
-
 	/**
 	 * @param args the command line arguments
 	 */
@@ -21,7 +20,6 @@ public class Main
 	{
 		BlockManager.loadBlocksFromFile("tst4.p1");
 		Interpretator.interpretBlock(BlockManager.getBaseBlock());
-
 		//testDivision();
 		//testVariableComplexity();
 		//testValueConversion();

@@ -2,7 +2,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package interpretator;
 
 /**
@@ -10,6 +9,7 @@ package interpretator;
  * @author Robin
  */
 public class Token {
+
 	public static final int TYPE_ID = 1;
 	public static final int TYPE_INT = 2;
 	public static final int TYPE_FLOAT = 3;
@@ -18,7 +18,6 @@ public class Token {
 	public static final int TYPE_ERROR = 6;
 	public static final int TYPE_ROWNR = 7;
 	public static final int TYPE_CALL = 10;
-
 	// <editor-fold defaultstate="collapsed" desc="constants">
 	public static final int ID_BEGIN = 1;
 	public static final int ID_END = 2;
@@ -45,41 +44,35 @@ public class Token {
 	private String text;
 
 	public Token(int type, int code, String text) {
-		this.type = type;
 		this.code = code;
+		this.type = type;
 		this.text = text;
 	}
 
-	public boolean isUserID()
-	{
+	public boolean isUserID() {
 		return type == TYPE_ID && code > ID_MAX;
 	}
-	
-	public boolean isEnd()
-	{
-		return type == TYPE_ID && text.equals("end");
+
+	public boolean isEnd() {
+		return code == ID_END && type == TYPE_ID;
 	}
-	
-	public boolean isBegin()
-	{
-		return type == TYPE_ID && text.equals("begin");
-	}
-	
-	public boolean isSemicolon()
-	{
+
+	public boolean isSemicolon() {
 		return type == TYPE_OPERATOR && text.equals(";");
 	}
-	
-	public boolean isCallblock()
-	{
+
+	public boolean isCallblock() {
 		return type == TYPE_CALL;
 	}
 
-	public int getType()
-	{
+	public boolean isRowNumber() {
+		return type == TYPE_ROWNR;
+	}
+
+	public int getType() {
 		return type;
 	}
-	
+
 	public int getCode() {
 		return code;
 	}
@@ -87,6 +80,4 @@ public class Token {
 	public String getText() {
 		return text;
 	}
-
-	
 }
