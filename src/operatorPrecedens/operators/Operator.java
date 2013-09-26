@@ -27,7 +27,7 @@ public class Operator
 				Value value = valueOp.getValue();
 				variableOp.memory.setSymbolValue(variableOp.symbolID, value);
 				
-				System.out.println("Variable " + variableOp.symbolID + " = " + value);
+				Interpretator.print("Variable " + variableOp.symbolID + " = " + value);
 				break;
 			case OP_ADD:
 				executeOperator(OperatorAdd.instance(), operands);
@@ -37,6 +37,9 @@ public class Operator
 				break;
 			case OP_MULTIPLY:
 				executeOperator(OperatorMultiply.instance(), operands);
+				break;
+			case OP_DIVIDE:
+				executeOperator(OperatorDivide.instance(), operands);
 				break;
 			case OP_GREATER_THAN:
 				executeOperator(OperatorGreaterThan.instance(), operands);

@@ -18,7 +18,7 @@ public class Main
 	 */
 	public static void main(String[] args)
 	{
-		BlockManager.loadBlocksFromFile("tst6.p1");
+		BlockManager.loadBlocksFromFile("multiparam.p1");
 		Interpretator.interpretBlock(BlockManager.getBaseBlock());
 		System.out.println("(: Finished :)");
 		//testDivision();

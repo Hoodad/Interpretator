@@ -32,7 +32,6 @@ public class FirstFileTest {
     public void tearDown() {
     }
 	
-	@Ignore
 	@Test
 	public void actionMatrixTest() {
 		System.out.println("+ func "+Interpretator.ActionMatrix[Interpretator.I_ADDITION][Interpretator.I_USERFUNCTION]);
@@ -44,7 +43,6 @@ public class FirstFileTest {
 		
 	}
 	
-	@Ignore
     @Test
     public void tst0() {
         runTest("tst0.p1");
@@ -58,28 +56,24 @@ public class FirstFileTest {
         assertEquals(successfulRun, true);
     }
     
-	@Ignore
     @Test
     public void tst2() {
         runTest("tst2.p1");
         assertEquals(successfulRun, true);
     }
-    
-	@Ignore
+	
     @Test
     public void tst3() {
         runTest("tst3.p1");
         assertEquals(successfulRun, true);
     }
     
-	@Ignore
     @Test
     public void tst4() {
         runTest("tst4.p1");
         assertEquals(successfulRun, true);
     }
 	
-	@Ignore
 	@Test
 	public void tst5() {
 		runTest("tst5.p1");

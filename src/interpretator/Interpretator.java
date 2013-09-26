@@ -4,14 +4,12 @@
  */
 package interpretator;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.LinkedList;
 import operatorPrecedens.Operand;
 import java.util.Stack;
 import operatorPrecedens.SymbolOperand;
 import operatorPrecedens.ValueOperand;
 import operatorPrecedens.operators.Operator;
-import operatorPrecedens.operators.OperatorCodes;
 import static operatorPrecedens.operators.OperatorCodes.*;
 
 /**
@@ -290,34 +288,54 @@ public class Interpretator {
 				operators.push(hand);
 				print("Function call pushed to operator stack");
 				break;
-			case 'C'://Nya op. är (, stacka funk.parentes, läs nästa
+			case 'C': {
+				//Nya op. är (, stacka funk.parentes, läs nästa
 				//C kommer endast när ett F är föregående
 				//Vet ej hur man ska stacka en funk.parantes.....
-				Token funcPar = new Token(Token.TYPE_OPERATOR, OperatorCodes.OP_LEFT_PAR, "f(");
-				funcPar.isFunctionPar = true;
+				Token funcPar = new TokenFuncPar();
 				operators.push(funcPar);
 				print("Function Parenthesis added to stack");
 				break;
-			case 'T'://Överför en parameter, läs nästa
-				operands.pop();
+			}
+			case 'T': { 
+				//Överför en parameter, läs nästa
+				try {
+					TokenFuncPar funcPar = (TokenFuncPar) operators.peek();
+					funcPar.addParameter(operands.pop().getValue());
+				} catch(ClassCastException ex) {
+					printError("Error when transfering next parameter: top of stack is not a function parenthesis");
+				}
 				print("Transfer next parameter, not yet implemented");
 				break;
+			}
 			case 'L': //Överför sista parameter, läs nästa
 				//F()
 				//Dont do anything except read next
-				//TODO: Ska föra över till funktionsanropet senare!!
-				Value lastParam = operands.pop().getValue();
-
-				operators.pop();
+				TokenFuncPar funcPar = null;
+				try {
+					funcPar = (TokenFuncPar) operators.pop();
+					funcPar.addParameter(operands.pop().getValue());
+				} catch(ClassCastException ex) {
+					printError("Error when transfering function parameters: top of stack is not a function parenthesis");
+				}
 				Token functionCall = operators.pop();
 				Symbol functionSymbol = currentBlock.getFunctionSymbol(functionCall.getCode());
 				Block functionBlock = BlockManager.getBlock(functionSymbol.getInfo2());
 				Memory functionMemory = new Memory(functionBlock.getSymbols(),
 						null, currentMemory, functionBlock.getSize());
 
-				functionMemory.setParameter(0, lastParam);
+				String paramsDebug = "";
+				if(funcPar != null) {
+					LinkedList<Value> parameters = funcPar.getParameters();
+					int parameterIndex = 0;
+					for(Value param : parameters) {
+						functionMemory.setParameter(parameterIndex, param);
+						paramsDebug += param+(parameterIndex+1 == parameters.size() ? "" : ",");
+						parameterIndex++;
+					}
+				}
 
-				print("Calling function "+functionSymbol.getName()+"("+lastParam+")");
+				print("Calling function "+functionSymbol.getName()+"("+paramsDebug+")");
 				
 				int calledFromToken = currentBlock.getTokens().getCursorPos();
 				interpretBlock(functionBlock, null, null, functionMemory);
@@ -357,7 +375,7 @@ public class Interpretator {
 			case OP_SEMI:
 				return I_ENDOFSTACK;
 			case OP_LEFT_PAR:
-				if (token.isFunctionPar) {
+				if (token.isFuncPar()) {
 					return I_FUNCTIONPAR;
 				}
 				return I_LEFTPAR;
@@ -392,15 +410,19 @@ public class Interpretator {
 	}
 
 	private static void processOperand(Token hand, Stack<Operand> operands, Memory memory) {
+		String appendDebugText = "";
 		switch (hand.getType()) {
 			case Token.TYPE_ID:
 				operands.push(new SymbolOperand(hand.getCode(), memory));
+				appendDebugText = "(="+operands.peek().getValue()+")";
 				break;
 			case Token.TYPE_INT:
 				operands.push(new ValueOperand(new Value(hand.getCode())));
 				break;
+			default:
+				printError("Invalid operand type: "+hand.getType());
 		}
-		print("Add Operand to stack: " + hand.getText());
+		print("Add Operand to stack: " + hand.getText()+ " " + appendDebugText);
 	}
 
 	private static char getActionFromAM(int stackIndex, int handIndex) {

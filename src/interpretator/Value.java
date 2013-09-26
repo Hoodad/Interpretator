@@ -17,6 +17,11 @@ public class Value
 		Boolean.class, Integer.class, Float.class, Double.class
 	};
 	
+	@Override
+	public String toString() {
+		return value.toString();
+	}
+	
 	public Value(Object value)
 	{
 //		//special handling for booleans
@@ -49,12 +54,6 @@ public class Value
 	public Object get()
 	{
 		return value;
-	}
-
-	@Override
-	public String toString()
-	{
-		return "" + value;
 	}
 
 	public boolean getAsBoolean()

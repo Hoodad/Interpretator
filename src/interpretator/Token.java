@@ -42,16 +42,18 @@ public class Token {
 	private int type;
 	private int code;
 	private String text;
-	public boolean isFunctionPar;
 	public Token next;
 
 	public Token(int type, int code, String text) {
 		this.code = code;
 		this.type = type;
 		this.text = text;
-		isFunctionPar = false;
 	}
 
+	public boolean isFuncPar() {
+		return false; //overridden in sub class TokenFuncPar
+	}
+	
 	public boolean isUserID() {
 		return type == TYPE_ID && code > ID_MAX;
 	}
