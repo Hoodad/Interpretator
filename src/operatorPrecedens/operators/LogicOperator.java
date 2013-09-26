@@ -4,6 +4,7 @@
  */
 package operatorPrecedens.operators;
 
+import interpretator.Interpretator;
 import interpretator.Value;
 
 /**
@@ -45,13 +46,13 @@ public abstract class LogicOperator implements BaseOperator
 			}
 			else
 			{
-				System.err.println("Error: unsupported value type: " + newType);
+				Interpretator.printError("Error: unsupported value type: " + newType);
 			}
 			return result;
 		}
 		catch(ArithmeticException ex)
 		{
-			System.err.println("Error: Arithmetic exception: "+ex.getLocalizedMessage());
+			Interpretator.printError("Error: Arithmetic exception: "+ex.getLocalizedMessage());
 			return new Value(0);
 		}
 	}

@@ -72,7 +72,7 @@ public class Value
 		}
 		catch (NumberFormatException ex2)
 		{
-			System.err.println("Error: Could not convert " + value.getClass().getName() + " to bool.");
+			Interpretator.printError("Error: Could not convert " + value.getClass().getName() + " to bool.");
 		}
 		return asNumber != 0;
 	}
@@ -96,7 +96,7 @@ public class Value
 			}
 			catch (NumberFormatException ex2)
 			{
-				System.err.println("Error: Could not convert " + value.getClass().getName() + " to int.");
+				Interpretator.printError("Error: Could not convert " + value.getClass().getName() + " to int.");
 				return 0;
 			}
 		}
@@ -114,7 +114,7 @@ public class Value
 		}
 		catch (NumberFormatException ex)
 		{
-			System.err.println("Error: Could not convert " + value.getClass().getName() + " to float.");
+			Interpretator.printError("Error: Could not convert " + value.getClass().getName() + " to float.");
 			return 0;
 		}
 	}
@@ -131,7 +131,7 @@ public class Value
 		}
 		catch (NumberFormatException ex)
 		{
-			System.err.println("Error: Could not convert " + value.getClass().getName() + " to double.");
+			Interpretator.printError("Error: Could not convert " + value.getClass().getName() + " to double.");
 			return 0;
 		}
 	}

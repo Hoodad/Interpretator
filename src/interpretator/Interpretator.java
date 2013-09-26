@@ -4,6 +4,8 @@
  */
 package interpretator;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import operatorPrecedens.Operand;
 import java.util.Stack;
 import operatorPrecedens.SymbolOperand;
@@ -65,6 +67,8 @@ public class Interpretator {
 					dynamicEnvironment, block.getSize());
 		}
 
+		callDepth++;
+		
 		int depth = 1;
 		while (depth > 0 && tokens.hasNextToken()) {
 			Token nextToken = tokens.peekToken();
@@ -73,11 +77,11 @@ public class Interpretator {
 				depth--;
 				tokens.moveCursor();
 			} else if (nextToken.isUserID()) {
-				System.out.println("Found a variable named: " + nextToken.getText());
+				print("Found a variable named: " + nextToken.getText());
 				interpretExpression(block, memory, tokens);
 			} else if (nextToken.isCallblock()) {
 
-				System.out.println("Found a Callblock!");
+				print("Found a Callblock!");
 
 				Block callblock = BlockManager.getBlock(nextToken.getCode());
 
@@ -93,18 +97,39 @@ public class Interpretator {
 
 				tokens.moveCursor();
 			} else if (nextToken.isRowNumber()) {
-				System.out.println("#Line#");
+				print("#Line#");
 				tokens.moveCursor();
 			} else if (nextToken.isIf()) {
-				System.out.println("If-statement ");
+				print("If-statement ");
 				tokens.moveCursor();
 			} else {
 				tokens.moveCursor();
-				System.err.println("Unkown token, don't know what to do");
+				printError("Unkown token: "+nextToken.getText());
 			}
 		}
+		callDepth--;
 	}
 
+	private static int callDepth = 0;
+	public static void print(String text) {
+		for(int i=0; i<callDepth; i++)
+		{
+			System.out.print("    ");
+		}
+		System.out.println(text);
+	}
+	public static void printError(String text) {
+		System.out.flush();
+		try
+		{
+			Thread.sleep(100);
+		}
+		catch (InterruptedException ex)
+		{
+		}
+		System.err.println(text);
+		
+	}
 	//used by if statements
 	private static enum BranchingStatus {
 
@@ -114,7 +139,7 @@ public class Interpretator {
 	private static void interpretExpression(Block currentBlock, Memory memory,
 			TokenStream tokens) {
 
-		System.out.println("##Begin Expression##");
+		print("##Begin Expression##");
 		Stack<Token> operators = new Stack<Token>();
 		Stack<Operand> operands = new Stack<Operand>();
 		BranchingStatus branchingStatus = BranchingStatus.NONE;
@@ -126,25 +151,35 @@ public class Interpretator {
 			hand = tokens.nextToken();
 			hand.next = tokens.peekToken();
 			switch (branchingStatus) {
-				case THEN:
-					System.out.println("## THEN");
+				case THEN: {
+					print("## THEN");
+					boolean avoidSkip = false;
 					if (hand.isElse()) {
 						branchingStatus = BranchingStatus.ELSE;
 					}
-					if (!ifResult) {
-						continue;
-					}
-					break;
-
-				case ELSE:
-					System.out.println("ELSE ##");
+					
 					if (hand.isSemicolon()) {
 						branchingStatus = BranchingStatus.NONE;
+						avoidSkip = true;
 					}
-					else if (ifResult) {
+					
+					if (!ifResult && !avoidSkip) {
 						continue;
 					}
 					break;
+				}
+				case ELSE: {
+					print("ELSE ##");
+					boolean avoidSkip = false;
+					if (hand.isSemicolon()) {
+						branchingStatus = BranchingStatus.NONE;
+						avoidSkip = true;
+					}
+					if (ifResult && !avoidSkip) {
+						continue;
+					}
+					break;
+				}
 				case NONE:
 					//just parse as normal
 					break;
@@ -156,15 +191,19 @@ public class Interpretator {
 			{
 				char action;
 				do {
-					System.out.println("Hand contains: " + hand.getText());
+					print("Hand contains: " + hand.getText());
 					action = processOperator(memory, currentBlock, operators, hand, operands);
-					System.out.println("Action: " + action);
+					print("Action: " + action);
 					if (action == 'A') {
 						if(hand.isThen())
 						{
 							ifResult = operands.pop().getValue().getAsBoolean();
 							branchingStatus = BranchingStatus.THEN;
-							System.out.println("Condition evaluated to: " + ifResult);
+							print("Condition evaluated to: " + ifResult);
+						}
+						else if(hand.isElse())
+						{
+							//expression NOT complete
 						}
 						else
 						{
@@ -175,19 +214,24 @@ public class Interpretator {
 			}
 		}
 		
-		System.out.println(
+		print(
 				"##Expression complete##");
 	}
 
 	private static boolean isFunctionCall(Block currentBlock, Token token) {
 		if (token.getType() == Token.TYPE_ID) {
-			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNC) {
-				return true;
-			}
-			if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNCVAL) {
-				if (token.next.getCode() == OP_LEFT_PAR) {
+			try {
+				if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNC) {
 					return true;
 				}
+				if (currentBlock.getSymbol(token.getCode()).getKind() == Symbol.KIND_FUNCVAL) {
+					if (token.next.getCode() == OP_LEFT_PAR) {
+						return true;
+					}
+				}
+			} catch(NullPointerException ex) {
+				printError("Error evaluating isFunctionCall for token: "+token.getText());
+				throw ex;
 			}
 		}
 
@@ -206,7 +250,7 @@ public class Interpretator {
 			return false;
 		}
 		if (isFunctionCall(currentBlock, token)) {
-			System.out.println("Function call detected");
+			print("Function call detected");
 			return false;
 		}
 
@@ -226,7 +270,7 @@ public class Interpretator {
 
 		switch (action) {
 			case 'S': // Stack push
-				System.out.println("Operator " + hand.getText() + " pushed to stack");
+				print("Operator " + hand.getText() + " pushed to stack");
 				operators.push(hand);
 				break;
 			case 'U': // Utför
@@ -244,7 +288,7 @@ public class Interpretator {
 				//Operator.executeOperator(operatorToken, operands);
 
 				operators.push(hand);
-				System.out.println("Function call pushed to operator stack");
+				print("Function call pushed to operator stack");
 				break;
 			case 'C'://Nya op. är (, stacka funk.parentes, läs nästa
 				//C kommer endast när ett F är föregående
@@ -252,11 +296,11 @@ public class Interpretator {
 				Token funcPar = new Token(Token.TYPE_OPERATOR, OperatorCodes.OP_LEFT_PAR, "f(");
 				funcPar.isFunctionPar = true;
 				operators.push(funcPar);
-				System.out.println("Function Parenthesis added to stack");
+				print("Function Parenthesis added to stack");
 				break;
 			case 'T'://Överför en parameter, läs nästa
 				operands.pop();
-				System.out.println("Transfer next parameter, not yet implemented");
+				print("Transfer next parameter, not yet implemented");
 				break;
 			case 'L': //Överför sista parameter, läs nästa
 				//F()
@@ -273,16 +317,17 @@ public class Interpretator {
 
 				functionMemory.setParameter(0, lastParam);
 
+				print("Calling function "+functionSymbol.getName()+"("+lastParam+")");
+				
 				int calledFromToken = currentBlock.getTokens().getCursorPos();
 				interpretBlock(functionBlock, null, null, functionMemory);
 				currentBlock.getTokens().setCursorPos(calledFromToken);
 				
 				operands.push(new ValueOperand(functionMemory.getReturnValue()));
-				System.out.println("Function returned "+functionMemory.getReturnValue().getAsInt());
-				System.out.println("Transfer last parameter");
+				print("Function returned "+functionMemory.getReturnValue().getAsInt());
 				break;
 			case 'E':
-				System.err.println("Syntax error in expression");
+				printError("Syntax error in expression");
 				break;
 		}
 		return action;
@@ -321,7 +366,7 @@ public class Interpretator {
 
 			case OP_COLON:
 				//OBS! We dont know what this means
-				System.err.println("Error: Colon operator not defined.");
+				printError("Error: Colon operator not defined.");
 				return -1;
 			case OP_COMMA:
 				return I_PARAMETERSEPARATOR;
@@ -355,7 +400,7 @@ public class Interpretator {
 				operands.push(new ValueOperand(new Value(hand.getCode())));
 				break;
 		}
-		System.out.println("Add Operand to stack: " + hand.getText());
+		print("Add Operand to stack: " + hand.getText());
 	}
 
 	private static char getActionFromAM(int stackIndex, int handIndex) {

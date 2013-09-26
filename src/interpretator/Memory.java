@@ -41,22 +41,22 @@ public class Memory
 				switch(symbols[i].getKind())
 				{
 					case Symbol.KIND_FUNC:
-						System.out.println("Function declaration found: "+symbols[i].getName());
+						Interpretator.print("Function declaration found: "+symbols[i].getName());
 						break;
 					
 					case Symbol.KIND_SIMPLE:
-						System.out.println("Simple declaration found: "+symbols[i].getName());
+						Interpretator.print("Simple declaration found: "+symbols[i].getName());
 						symbolValues[memoryI] = new Value(0);
 						symbolValueIndexMap.put(symbols[i].getId(), memoryI);
 						memoryI++;
 						break;
 						
 					case Symbol.KIND_ARRAY:
-						System.err.println("Array declaration is not supported");
+						Interpretator.printError("Array declaration is not supported");
 						throw new NotImplementedException();
 						
 					case Symbol.KIND_FUNCVAL:
-						System.out.println("Function return value found: "+symbols[i].getName());
+						Interpretator.print("Function return value found: "+symbols[i].getName());
 						symbolValues[memoryI] = new Value(0);
 						symbolValueIndexMap.put(symbols[i].getId(), memoryI);
 						returnValueIndex = memoryI;
@@ -64,11 +64,11 @@ public class Memory
 						
 						break;
 					case Symbol.KIND_OBJECT:
-						System.err.println("Object declaration is not supported");
+						Interpretator.printError("Object declaration is not supported");
 						throw new NotImplementedException();
 						
 					case Symbol.KIND_REFERENCE:
-						System.err.println("Reference declaration is not supported");
+						Interpretator.printError("Reference declaration is not supported");
 						throw new NotImplementedException();
 					default:
 						throw new IllegalArgumentException("Invalid declaration kind");
@@ -77,7 +77,7 @@ public class Memory
 		}
 		catch (ArrayIndexOutOfBoundsException ex)
 		{
-			System.err.println("Error: all symbols did not fit in memory block");
+			Interpretator.printError("Error: all symbols did not fit in memory block");
 		}
 	}
 
@@ -94,7 +94,7 @@ public class Memory
 			if (memoryEnvironment == null)
 			{
 				//if this is a root block (no environment), the variable doesn't exist
-				System.err.println("Error: accessing non-existing variable, not setting the value (id = " + symbolID + ")");
+				Interpretator.printError("Error: accessing non-existing variable, not setting the value (id = " + symbolID + ")");
 			}
 			else
 			{
@@ -121,7 +121,7 @@ public class Memory
 			if (memoryEnvironment == null)
 			{
 				//if this is a root block (no environment), the variable doesn't exist
-				System.err.println("Error: accessing non-existing variable, using zero instead (id = " + symbolID + ")");
+				Interpretator.printError("Error: accessing non-existing variable, using zero instead (id = " + symbolID + ")");
 				return new Value(0);
 			}
 			else
@@ -155,7 +155,7 @@ public class Memory
 				break;
 			default:
 				father = staticFather;
-				System.err.println("Error: illegal value set for memory inheritance, using static inheritance");
+				Interpretator.printError("Error: illegal value set for memory inheritance, using static inheritance");
 		}
 		return father;
 	}

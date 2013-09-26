@@ -29,7 +29,7 @@ public class SymbolOperand implements Operand
 //			case Symbol.KIND_SIMPLE:
 				return memory.getSymbolValue(symbolID);
 //			default:
-//				System.err.println("Unsupported symbol kind: " + symbol.getKind());
+//				Interpretator.printError("Unsupported symbol kind: " + symbol.getKind());
 //				return null;
 //		}
 	}

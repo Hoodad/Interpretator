@@ -99,7 +99,7 @@ public class FirstFileTest {
 		assertEquals(successfulRun, true);
 		
 		int i=3;
-		i = i+test6Func(1)*i+test6Func(i);
+		i = i+test6Func(2)*i+test6Func(i);
 		System.out.println("Expected result: "+i);
 	}
     

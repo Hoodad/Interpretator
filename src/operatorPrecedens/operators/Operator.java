@@ -4,6 +4,7 @@
  */
 package operatorPrecedens.operators;
 
+import interpretator.Interpretator;
 import interpretator.Token;
 import interpretator.Value;
 import java.util.Stack;
@@ -41,7 +42,7 @@ public class Operator
 				executeOperator(OperatorGreaterThan.instance(), operands);
 				break;
 			default:
-				System.err.println("Unsupported Operator: "+operatorToken.getText());
+				Interpretator.printError("Unsupported Operator: "+operatorToken.getText());
 		}
 	}
 	
