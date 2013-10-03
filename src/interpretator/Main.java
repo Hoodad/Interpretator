@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package interpretator;
 
 import operatorPrecedens.operators.OperatorAdd;
@@ -13,12 +10,10 @@ import operatorPrecedens.operators.OperatorDivide;
  */
 public class Main
 {
-	/**
-	 * @param args the command line arguments
-	 */
 	public static void main(String[] args)
 	{
-		BlockManager.loadBlocksFromFile("multiparam.p1");
+		System.out.println("(: Starting :)");
+		BlockManager.loadBlocksFromFile("tst6.p1");
 		Interpretator.interpretBlock(BlockManager.getBaseBlock());
 		System.out.println("(: Finished :)");
 		//testDivision();

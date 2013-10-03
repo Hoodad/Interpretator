@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package interpretator;
 
@@ -50,7 +46,6 @@ public class BlockManager {
 			Symbol[] symbols = new Symbol[nrOfDeclarations];
 			for(int j=0; j<nrOfDeclarations; j++)
 			{
-				//todo: store declarations into a template for the block
 				int symbolID = in.nextInt();
 				int type = in.nextInt();
 				int kind = in.nextInt();

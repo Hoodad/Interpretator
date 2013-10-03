@@ -49,7 +49,7 @@ public class FirstFileTest {
         assertEquals(successfulRun, true);
     }
 	
-	@Ignore
+	
     @Test
     public void tst1() {
         runTest("tst1.p1");
@@ -95,6 +95,12 @@ public class FirstFileTest {
 		int i=3;
 		i = i+test6Func(2)*i+test6Func(i);
 		System.out.println("Expected result: "+i);
+	}
+	
+	@Test
+	public void multiparm() {
+		runTest("multiparam.p1");
+		assertEquals(successfulRun, true);
 	}
     
     private void runTest(String p_testProg){

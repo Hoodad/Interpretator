@@ -17,7 +17,15 @@ import static operatorPrecedens.operators.OperatorCodes.*;
  * @author Robinerd
  */
 public class Interpretator {
-
+	
+	//used by if statements
+	private static enum BranchingStatus {
+		NONE, THEN, ELSE
+	}
+	
+	//Used for formating the debug output
+	private static int callDepth = 0;
+	
 	public static final int I_BECOME = 0;
 	public static final int I_ADDITION = 1;
 	public static final int I_MULTIPLICATION = 2;
@@ -95,7 +103,7 @@ public class Interpretator {
 
 				tokens.moveCursor();
 			} else if (nextToken.isRowNumber()) {
-				print("#Line#");
+				print("#Empty Line#");
 				tokens.moveCursor();
 			} else if (nextToken.isIf()) {
 				print("If-statement ");
@@ -107,33 +115,6 @@ public class Interpretator {
 		}
 		callDepth--;
 	}
-
-	private static int callDepth = 0;
-	public static void print(String text) {
-		for(int i=0; i<callDepth; i++)
-		{
-			System.out.print("    ");
-		}
-		System.out.println(text);
-	}
-	public static void printError(String text) {
-		System.out.flush();
-		try
-		{
-			Thread.sleep(100);
-		}
-		catch (InterruptedException ex)
-		{
-		}
-		System.err.println(text);
-		
-	}
-	//used by if statements
-	private static enum BranchingStatus {
-
-		NONE, THEN, ELSE
-	}
-
 	private static void interpretExpression(Block currentBlock, Memory memory,
 			TokenStream tokens) {
 
@@ -150,7 +131,6 @@ public class Interpretator {
 			hand.next = tokens.peekToken();
 			switch (branchingStatus) {
 				case THEN: {
-					print("## THEN");
 					boolean avoidSkip = false;
 					if (hand.isElse()) {
 						branchingStatus = BranchingStatus.ELSE;
@@ -167,7 +147,6 @@ public class Interpretator {
 					break;
 				}
 				case ELSE: {
-					print("ELSE ##");
 					boolean avoidSkip = false;
 					if (hand.isSemicolon()) {
 						branchingStatus = BranchingStatus.NONE;
@@ -179,13 +158,13 @@ public class Interpretator {
 					break;
 				}
 				case NONE:
-					//just parse as normal
 					break;
 			}
 
 			if (isOperand(currentBlock, hand)) {
 				processOperand(hand, operands, memory);
-			} else //is operator
+			} 
+			else //is operator
 			{
 				char action;
 				do {
@@ -198,6 +177,12 @@ public class Interpretator {
 							ifResult = operands.pop().getValue().getAsBoolean();
 							branchingStatus = BranchingStatus.THEN;
 							print("Condition evaluated to: " + ifResult);
+							if(ifResult){
+								print("## THEN");
+							}
+							else{
+								print("ELSE ##");
+							}
 						}
 						else if(hand.isElse())
 						{
@@ -431,5 +416,24 @@ public class Interpretator {
 		} catch (ArrayIndexOutOfBoundsException err) {
 			return '?';
 		}
+	}
+	public static void print(String text) {
+		for(int i=1; i<callDepth; i++)
+		{
+			System.out.print("    ");
+		}
+		System.out.println(text);
+	}
+	public static void printError(String text) {
+		System.out.flush();
+		try
+		{
+			Thread.sleep(100);
+		}
+		catch (InterruptedException ex)
+		{
+		}
+		System.err.println(text);
+		
 	}
 }
